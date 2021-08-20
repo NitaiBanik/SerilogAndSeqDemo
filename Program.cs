@@ -1,22 +1,30 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
 using System;
+using System.Threading;
 
 namespace SerilogAndSeqDemo
 {
+    class ThreadIdEnricher : ILogEventEnricher
+    {
+        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+        {
+            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                "ThreadId", Thread.CurrentThread.ManagedThreadId));
+        }
+    }
     public class Program
     {
         public static int Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .CreateBootstrapLogger();
-
+                .Enrich.With(new ThreadIdEnricher())
+                .WriteTo.Console(
+                    outputTemplate: "{Timestamp:HH:mm} [{Level}] ({ThreadId}) {Message}{NewLine}{Exception}")
+                .CreateLogger();
             try
             {
                 Log.Information("Starting web host");
@@ -36,11 +44,7 @@ namespace SerilogAndSeqDemo
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog((context, services, configuration) => configuration
-                    .ReadFrom.Configuration(context.Configuration)
-                    .ReadFrom.Services(services)
-                    .Enrich.FromLogContext()
-                    .WriteTo.Console(new RenderedCompactJsonFormatter()))
+                .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
