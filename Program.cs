@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using System;
-using Serilog.Core;
 
 namespace SerilogAndSeqDemo
 {
@@ -12,7 +11,7 @@ namespace SerilogAndSeqDemo
         public static int Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .CreateLogger();
