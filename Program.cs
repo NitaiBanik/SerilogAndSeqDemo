@@ -18,23 +18,22 @@ namespace SerilogAndSeqDemo
     }
     public class Program
     {
-        public static int Main(string[] args)
+        public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
                 .Enrich.With(new ThreadIdEnricher())
                 .WriteTo.Console(
-                    outputTemplate: "{Timestamp:HH:mm} [{Level}] ({ThreadId}) {Message}{NewLine}{Exception}")
+                    outputTemplate: "{Timestamp:HH:mm} [{Level}] ({ThreadId}) {Message}{NewLine}{Exception}")                
+                .WriteTo.Seq("http://localhost:5341")
                 .CreateLogger();
             try
             {
                 Log.Information("Starting web host");
                 CreateHostBuilder(args).Build().Run();
-                return 0;
             }
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Host terminated unexpectedly");
-                return 1;
             }
             finally
             {
